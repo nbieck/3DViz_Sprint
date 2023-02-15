@@ -37,6 +37,10 @@ export default class {
         }
     }
 
+    get canChangeFacing() {
+        return this.#ismobile;
+    }
+
     get isUsable() {
         return this.#usable;
     }

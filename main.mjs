@@ -44,6 +44,15 @@ function init() {
     createGui();
 }
 
+function onclick(ev) {
+    if (vidMgr.canChangeFacing) {
+        vidMgr.changeFacing();
+    }
+    else {
+        console.log("Couldn't change facing.");
+    }
+}
+
 function createGui() {
     const gui = new GUI();
 
