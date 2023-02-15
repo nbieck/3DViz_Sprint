@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+import ShaderLoader from './shader_loader.mjs';
+
 export default class Histogram {
 
     #loader;
@@ -10,7 +12,7 @@ export default class Histogram {
     #histogrammaterial;
 
     constructor(vidmgr) {
-        this.#loader = new THREE.FileLoader();
+        this.#loader = new ShaderLoader();
 
         this.#createTmpHisto();
         this.#loadHistogramMaterial();
@@ -49,17 +51,6 @@ export default class Histogram {
             }
         });
 
-        this.#loader.load('./shaders/basic.vert.glsl', txt => {
-            this.#histogrammaterial.vertexShader = txt;
-            if (this.#histogrammaterial.fragmentShader) {
-                this.#histogrammaterial.needsUpdate = true;
-            }
-        });
-        this.#loader.load('./shaders/render_histo.frag.glsl', txt => {
-            this.#histogrammaterial.fragmentShader = txt
-            if (this.#histogrammaterial.vertexShader) {
-                this.#histogrammaterial.needsUpdate = true;
-            }
-        });
+        this.#loader.load('./shaders/basic.vert.glsl', './shaders/render_histo.frag.glsl', this.#histogrammaterial);
     }
 }
