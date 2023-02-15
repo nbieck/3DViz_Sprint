@@ -3,14 +3,19 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import Stats from 'three/addons/libs/stats.module.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
+import VideoManager from './video_manager.mjs';
+
 let canvas;
 let renderer, scene, camera, controls;
 
 let stats, settings;
+let vidMgr;
 
 function init() {
     canvas = document.querySelector('#c');
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+
+    vidMgr = new VideoManager();
 
     window.addEventListener("click", onclick, true);
 
@@ -29,6 +34,12 @@ function init() {
 
     stats = new Stats();
     document.body.appendChild(stats.dom);
+
+    const mat = new THREE.MeshBasicMaterial({side: THREE.DoubleSide});
+    vidMgr.addTextureUser(mat, 'map');
+
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), mat);
+    scene.add(mesh);
 
     createGui();
 }
