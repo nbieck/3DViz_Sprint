@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export default class {
+export default class VideoManager {
     #video;
     #vidtexture;
 

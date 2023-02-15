@@ -4,18 +4,24 @@ import Stats from 'three/addons/libs/stats.module.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
 import VideoManager from './video_manager.mjs';
+import Histogram from './histogram.mjs';
 
 let canvas;
 let renderer, scene, camera, controls;
 
 let stats, settings;
 let vidMgr;
+let histo;
 
 function init() {
+    THREE.Cache.enabled = true;
+
     canvas = document.querySelector('#c');
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.autoClear = false;
 
     vidMgr = new VideoManager();
+    histo = new Histogram(vidMgr);
 
     window.addEventListener("click", onclick, true);
 
@@ -30,16 +36,12 @@ function init() {
     controls.listenToKeyEvents(window); // optional
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x333333);
+    vidMgr.addTextureUser(scene, 'background');
 
     stats = new Stats();
     document.body.appendChild(stats.dom);
 
-    const mat = new THREE.MeshBasicMaterial({side: THREE.DoubleSide});
-    vidMgr.addTextureUser(mat, 'map');
-
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), mat);
-    scene.add(mesh);
+    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), histo.histogramMaterial));
 
     createGui();
 }
@@ -81,9 +83,11 @@ function render(time) {
         camera.updateProjectionMatrix();
     }
 
+
     stats.update();
     controls.update();
     animateScene(time);
+
     renderer.render(scene, camera);
 }
 
