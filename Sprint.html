@@ -18,95 +18,22 @@
       display: block;
     }
   </style>
+
+  <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+  <script type="importmap">
+        {
+          "imports": {
+            "three": "https://unpkg.com/three@0.148.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.148.0/examples/jsm/"
+          }
+        }
+  </script>
+  <script type="module" src="main.mjs"></script>
 </head>
 
 
 <body>
   <canvas id="c"></canvas>
 </body>
-
-<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
-<script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.148.0/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.148.0/examples/jsm/"
-        }
-      }
-</script>
-
-<script type="module">
-  import * as THREE from 'three';
-  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-  import Stats from 'three/addons/libs/stats.module.js';
-  import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-
-  let canvas;
-  let renderer, scene, camera, controls;
-
-  let stats, settings;
-
-  function init() {
-    canvas = document.querySelector('#c');
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-
-    window.addEventListener("click", onclick, true);
-
-    const fov = 75;
-    const aspect = canvas.innerWidth / canvas.innerHeight;
-    const near = 0.1;
-    const far = 100;
-    camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    camera.position.z = 5;
-
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.listenToKeyEvents(window); // optional
-
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x333333);
-
-    stats = new Stats();
-    document.body.appendChild(stats.dom);
-
-    createGui();
-  }
-
-  function createGui() {
-    const gui = new GUI();
-
-    settings = {};
-  }
-
-  function resizeRendererToDisplaySize(renderer) {
-    const canvas = renderer.domElement;
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    const needResize = canvas.width !== width || canvas.height !== height;
-    if (needResize) {
-      renderer.setSize(width, height, false);
-    }
-    return needResize;
-  }
-
-  function animateScene(time) {
-
-  }
-
-  function render(time) {
-    if (resizeRendererToDisplaySize(renderer)) {
-      const canvas = renderer.domElement;
-      camera.aspect = canvas.clientWidth / canvas.clientHeight;
-      camera.updateProjectionMatrix();
-    }
-
-    stats.update();
-    controls.update(); 
-    animateScene(time);
-    renderer.render(scene, camera);
-  }
-
-  init();
-  renderer.setAnimationLoop(render);
-</script>
 
 </html>
