@@ -7,14 +7,14 @@ export default class Histogram {
     #loader;
 
     #histogrambuckets;
-    #histogrammax;
+    #bucketsdownsample;
 
     #histogrammaterial;
 
     constructor(vidmgr) {
         this.#loader = new ShaderLoader();
-
-        this.#createTmpHisto();
+        
+        this.#createRenderTargets();
         this.#loadHistogramMaterial();
     }
 
@@ -22,32 +22,29 @@ export default class Histogram {
         return this.#histogrammaterial;
     }
 
-    #createTmpHisto() {
-        const width = 256;
-        const stride = 4;
+    runProcessing(renderer) {
 
-        const data = new Float32Array(width * stride);
+    }
 
-        for (let i = 0; i < width; i++) {
-            data[i*stride] = i;
-            data[i*stride+1] = (i+128)%256;
-            data[i*stride+2] = (i+32)%256;
-        }
-
-        this.#histogrambuckets = new THREE.DataTexture(data, width, 1, THREE.RGBAFormat, THREE.FloatType);
-        this.#histogrambuckets.needsUpdate = true;
+    #createRenderTargets() {
+        this.#histogrambuckets = new THREE.WebGLRenderTarget(256, 1, {
+            magFilter: THREE.NearestFilter,
+            minFilter: THREE.NearestFilter,
+            type: THREE.FloatType
+        });
         
-        const maxData = new Float32Array(4);
-        maxData[0] = 255;
-        this.#histogrammax = new THREE.DataTexture(maxData, 1, 1, THREE.RGBAFormat, THREE.FloatType);
-        this.#histogrammax.needsUpdate = true;
+        this.#bucketsdownsample = [];
+        for (let i = 0; i < 4; i++) {
+            this.#bucketsdownsample.push(this.#histogrambuckets.clone());
+            this.#bucketsdownsample[i].setSize(Math.pow(4, i), 1);
+        }
     }
 
     #loadHistogramMaterial() {
         this.#histogrammaterial = new THREE.ShaderMaterial({
             uniforms: {
-                histo_buckets: {value: this.#histogrambuckets},
-                max_val: {value: this.#histogrammax},
+                histo_buckets: {value: null},
+                max_val: {value: null},
             }
         });
 
