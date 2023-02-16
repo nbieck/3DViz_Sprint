@@ -41,11 +41,7 @@ function init() {
     stats = new Stats();
     document.body.appendChild(stats.dom);
 
-    // very temporary
-    let m = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), new THREE.MeshBasicMaterial({color: 0x222222, transparent: true, opacity: 0.5}));
-    m.position.z = -0.01;
-    scene.add(m);
-    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), histo.histogramMaterial));
+    scene.add(histo.histogramGroup);
 
     createGui();
 }

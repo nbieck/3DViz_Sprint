@@ -13,6 +13,8 @@ export default class Histogram {
     #downsamplematerial;
     #histogrammaterial;
 
+    #histogroup;
+
     #offscreenscene;
     #offscreencamera;
     #quad;
@@ -26,12 +28,13 @@ export default class Histogram {
         this.#loadDownsampleMaterial();
         this.#loadHistogramMaterial();
         this.#createScene();
+        this.#createGroup();
 
         vidmgr.addTextureUser(this, 'videoTex');
     }
 
-    get histogramMaterial() {
-        return this.#histogrammaterial;
+    get histogramGroup() {
+        return this.#histogroup;
     }
 
     set videoTex(tex) {
@@ -160,5 +163,19 @@ export default class Histogram {
         this.#quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.#downsamplematerial);
         this.#quad.visible = false;
         this.#offscreenscene.add(this.#quad);
+    }
+
+    #createGroup() {
+        this.#histogroup = new THREE.Group();
+        this.#histogroup.name = "Histogram";
+
+        this.#histogroup.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2), this.#histogrammaterial));
+        const background = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), new THREE.MeshBasicMaterial({
+            color: 0x333333,
+            transparent: true,
+            opacity: 0.5,
+        }));
+        background.position.z = -0.01;
+        this.#histogroup.add(background);
     }
 }
