@@ -88,6 +88,9 @@ function render(time) {
     controls.update();
     animateScene(time);
 
+    histo.runProcessing(renderer);
+
+    renderer.clear();
     renderer.render(scene, camera);
 }
 
