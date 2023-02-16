@@ -5,6 +5,7 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
 import VideoManager from './video_manager.mjs';
 import Histogram from './histogram.mjs';
+import ColorCloud from './color_cloud.mjs';
 
 let canvas;
 let renderer, scene, camera, controls;
@@ -22,6 +23,7 @@ function init() {
 
     vidMgr = new VideoManager();
     histo = new Histogram(vidMgr);
+    let cloudRGB = new ColorCloud(ColorCloud.SRGB, false, vidMgr);
 
     window.addEventListener("click", onclick, true);
 
@@ -41,7 +43,14 @@ function init() {
     stats = new Stats();
     document.body.appendChild(stats.dom);
 
-    scene.add(histo.histogramGroup);
+    const histoGroup = histo.histogramGroup;
+    histoGroup.position.set(-2,2,0);
+    histoGroup.scale.x = 2;
+    scene.add(histoGroup);
+
+    cloudRGB.cloudGroup.position.set(2,0,0);
+    cloudRGB.cloudGroup.rotation.set(Math.PI / 4, -Math.PI / 4, 0)
+    scene.add(cloudRGB.cloudGroup);
 
     createGui();
 }
