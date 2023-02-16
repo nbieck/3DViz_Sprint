@@ -35,6 +35,8 @@ export default class Histogram {
     }
 
     set videoTex(tex) {
+        console.log(tex.userData.width);
+        console.log(tex.userData.height);
         let num_pixels = tex.userData.height * tex.userData.width;
 
         let geometry = new THREE.BufferGeometry();
