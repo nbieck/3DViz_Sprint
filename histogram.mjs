@@ -10,6 +10,7 @@ export default class Histogram {
     #bucketsdownsample;
 
     #bucketmaterial;
+    #downsamplematerial;
     #histogrammaterial;
 
     #offscreenscene;
@@ -22,6 +23,7 @@ export default class Histogram {
         
         this.#createRenderTargets();
         this.#loadBucketingMaterial();
+        this.#loadDownsampleMaterial();
         this.#loadHistogramMaterial();
         this.#createScene();
 
@@ -51,8 +53,19 @@ export default class Histogram {
     runProcessing(renderer) {
         const clearColor = renderer.getClearColor(new THREE.Color());
         renderer.setClearColor(new THREE.Color(0,0,0));
-        renderer.setRenderTarget(this.#histogrambuckets);
 
+        if (this.#points) {
+            this.#computeBuckets(renderer);
+            this.#downsample(renderer);
+        }
+
+        renderer.setClearColor(clearColor);
+    }
+
+    #computeBuckets(renderer) {
+        renderer.setRenderTarget(this.#histogrambuckets);
+        this.#quad.visible = false;
+        this.#points.visible = true;
         renderer.clear();
         for (let i = 0; i < 3; i++) {
             const c_array = [0,0,0];
@@ -60,9 +73,27 @@ export default class Histogram {
             this.#bucketmaterial.uniforms.color.value.fromArray(c_array);
             renderer.render(this.#offscreenscene, this.#offscreencamera);
         }
-
         renderer.setRenderTarget(null);
-        renderer.setClearColor(clearColor);
+    }
+
+    #downsample(renderer) {
+        this.#quad.visible = true;
+        this.#points.visible = false;
+
+        for (let i = 3; i >= 0; i--) {
+            renderer.setRenderTarget(this.#bucketsdownsample[i]);
+
+            if (i == 3) {
+                this.#downsamplematerial.uniforms.tex.value = this.#histogrambuckets.texture;
+            }
+            else {
+                this.#downsamplematerial.uniforms.tex.value = this.#bucketsdownsample[i+1].texture;
+            }
+
+            renderer.clear();
+            renderer.render(this.#offscreenscene, this.#offscreencamera);
+        }
+        renderer.setRenderTarget(null);
     }
 
     #createRenderTargets() {
@@ -96,11 +127,21 @@ export default class Histogram {
         this.#loader.load('./shaders/count_buckets.vert.glsl', './shaders/count_buckets.frag.glsl', this.#bucketmaterial);
     }
 
+    #loadDownsampleMaterial() {
+        this.#downsamplematerial = new THREE.ShaderMaterial({
+            uniforms: {
+                tex: {value: null},
+            }
+        });
+
+        this.#loader.load('./shaders/pass_through.vert.glsl', './shaders/maxpool_x4.frag.glsl', this.#downsamplematerial);
+    }
+
     #loadHistogramMaterial() {
         this.#histogrammaterial = new THREE.ShaderMaterial({
             uniforms: {
                 histo_buckets: {value: this.#histogrambuckets.texture},
-                max_val: {value: null},
+                max_val: {value: this.#bucketsdownsample[0].texture},
             }
         });
 
@@ -112,5 +153,10 @@ export default class Histogram {
 
         // processing rendering ignored camera parameters, just need one to make three.js happy
         this.#offscreencamera = new THREE.OrthographicCamera(0,1,0,1,0,1);
+        this.#offscreenscene.add(this.#offscreencamera);
+
+        this.#quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.#downsamplematerial);
+        this.#quad.visible = false;
+        this.#offscreenscene.add(this.#quad);
     }
 }

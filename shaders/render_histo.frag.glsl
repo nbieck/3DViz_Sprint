@@ -10,7 +10,7 @@ void main()
     vec3 counts = texture(histo_buckets, uv).rgb;
     vec3 max_count = vec3(texture(max_val, uv).r);
 
-    vec3 relative = counts / 10000.;//max_count;
+    vec3 relative = counts / max_count;
 
     bvec3 larger = lessThan(relative, vec3(uv.y));
     if (all(larger)) discard;
