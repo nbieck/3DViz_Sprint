@@ -60,15 +60,25 @@ export default class ColorCloud {
         const rMat = new THREE.MeshBasicMaterial({color: 0xaa0000});
         const rAx = this.#makeAxis(rMat);
         rAx.rotation.z = -Math.PI / 2;
+        if (this.#colorspace == ColorCloud.Lab) {
+            rAx.position.z = 0;
+        }
         axes.add(rAx);
 
         const gMat = new THREE.MeshBasicMaterial({color: 0x00aa00});
         const gAx = this.#makeAxis(gMat);
+        if (this.#colorspace == ColorCloud.Lab) {
+            gAx.position.x = 0;
+            gAx.position.z = 0;
+        }
         axes.add(gAx);
 
         const bMat = new THREE.MeshBasicMaterial({color: 0x0000aa});
         const bAx = this.#makeAxis(bMat);
         bAx.rotation.x = Math.PI / 2;
+        if (this.#colorspace == ColorCloud.Lab) {
+            bAx.position.x = 0;
+        }
         axes.add(bAx);
 
         this.#group.add(axes);
@@ -103,35 +113,47 @@ export default class ColorCloud {
     }
 
     #createGrid() {
-        const sideLength = 1;
-        let num_lines = 10;
-        if (this.#colorspace === ColorCloud.xyY) {
-            num_lines = 7;
+        const extents = {dataMin: {}, dataMax: {}, spaceMin: {}, spaceMax:{}};
+        this.#setbounds(extents);
+
+        const step = (this.#colorspace == ColorCloud.Lab) ? 10 : 0.1;
+
+        const vertex_data = [];
+
+        const y = extents.dataMin.value.y;
+
+        const primary_axes = [0,2];
+        const secondary_axes = [2,0];
+        for (let ax = 0; ax < 2; ax++) {
+            const primary = primary_axes[ax];
+            const secondary = secondary_axes[ax];
+
+            const lineStart = extents.dataMin.value.toArray()[secondary];
+            const lineEnd = extents.dataMax.value.toArray()[secondary];
+
+            const negative = Math.ceil(extents.dataMin.value.toArray()[primary]/ step);
+            const positive = Math.floor(extents.dataMax.value.toArray()[primary]/step);
+            for (let i = negative; i <= positive; ++i) {
+                let p = [i*step,y,lineStart];
+                vertex_data.push(p[primary]);
+                vertex_data.push(p[1]);
+                vertex_data.push(p[secondary]);
+                
+                p = [i*step, y, lineEnd];
+                vertex_data.push(p[primary]);
+                vertex_data.push(p[1]);
+                vertex_data.push(p[secondary]);
+            }
         }
-        const interval = sideLength / num_lines;
-        const directions = 2;
-        const vertsPerLine = 2;
-        const components = 3;
-        const vertices = new Float32Array(num_lines * directions * vertsPerLine * components);
 
-        const stride = components * vertsPerLine * directions;
-        for (let i = 0; i < 10; i++) {
-            vertices[i * stride] = interval * (i+1);
-
-            vertices[i * stride + components] = interval * (i+1);
-            vertices[i * stride + components + 2] = 1;
-
-            vertices[i * stride + vertsPerLine * components + 2] = interval * (i+1);
-
-            vertices[i * stride + (vertsPerLine + 1) * components] = 1;
-            vertices[i * stride + (vertsPerLine + 1) * components + 2] = interval * (i+1);
-        }
+        const vertices = Float32Array.from(vertex_data);
 
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
 
         const lines = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({color: 0xaaaaaa}));
-        lines.position.set(-0.5,-0.5,-0.5);
+        lines.scale.copy(extents.spaceMax.value.clone().sub(extents.spaceMin.value).divide(extents.dataMax.value.clone().sub(extents.dataMin.value)));
+        lines.position.copy(extents.spaceMin.value.clone().sub(extents.dataMin.value.clone().multiply(lines.scale)));
 
         this.#group.add(lines);
     }
@@ -153,7 +175,7 @@ export default class ColorCloud {
             transparent: this.#isDensity,
         });
         this.#shaderLoader.load('./shaders/color_cloud.vert.glsl', './shaders/color_cloud.frag.glsl', this.#pointcloudmat);
-        this.#setbounds(this.#pointcloudmat);
+        this.#setbounds(this.#pointcloudmat.uniforms);
 
         this.#points = new THREE.Points();
         this.#points.material = this.#pointcloudmat;
@@ -175,7 +197,7 @@ export default class ColorCloud {
             transparent: true,
         });
         this.#shaderLoader.load('./shaders/color_cloud.vert.glsl', './shaders/color_cloud.frag.glsl', this.#pointcloudshadowmat);
-        this.#setbounds(this.#pointcloudshadowmat);
+        this.#setbounds(this.#pointcloudshadowmat.uniforms);
 
         this.#pointshadows = new THREE.Points();
         this.#pointshadows.material = this.#pointcloudshadowmat;
@@ -185,16 +207,20 @@ export default class ColorCloud {
         this.#group.add(this.#pointshadows);
     }
 
-    #setbounds(mat) {
+    #setbounds(uniforms) {
         if (this.#colorspace === ColorCloud.SRGB) {
-            mat.uniforms.dataMin.value = new THREE.Vector3(0,0,0);
-            mat.uniforms.dataMax.value = new THREE.Vector3(1,1,1);
+            uniforms.dataMin.value = new THREE.Vector3(0,0,0);
+            uniforms.dataMax.value = new THREE.Vector3(1,1,1);
         }
         if (this.#colorspace === ColorCloud.xyY) {
-            mat.uniforms.dataMin.value = new THREE.Vector3(0, 0, 0);
-            mat.uniforms.dataMax.value = new THREE.Vector3(0.7, 1, 0.7);
+            uniforms.dataMin.value = new THREE.Vector3(0, 0, 0);
+            uniforms.dataMax.value = new THREE.Vector3(0.7, 1, 0.7);
         }
-        mat.uniforms.spaceMin.value = new THREE.Vector3(-0.5, -0.5, -0.5);
-        mat.uniforms.spaceMax.value = new THREE.Vector3(0.5, 0.5, 0.5);
+        if (this.#colorspace === ColorCloud.Lab) {
+            uniforms.dataMin.value = new THREE.Vector3(-128, 0, -128);
+            uniforms.dataMax.value = new THREE.Vector3(127, 100, 127);
+        }
+        uniforms.spaceMin.value = new THREE.Vector3(-0.5, -0.5, -0.5);
+        uniforms.spaceMax.value = new THREE.Vector3(0.5, 0.5, 0.5);
     }
 }
