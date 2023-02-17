@@ -10,6 +10,7 @@ const mat3 XYZ_conversion = mat3(
 
 uniform lowp sampler2D tex;
 uniform int mode;
+uniform bool isShadow;
 
 out vec3 color;
 
@@ -54,6 +55,10 @@ void main() {
         pos = texColor - vec3(0.5);
     }
 
+    if (isShadow) 
+    {
+        pos.y = -0.5;
+    }
 
     vec4 viewPos = modelViewMatrix * vec4(pos, 1.);
     gl_Position = projectionMatrix * viewPos;

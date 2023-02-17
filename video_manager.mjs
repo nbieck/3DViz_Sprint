@@ -123,8 +123,8 @@ export default class VideoManager {
     #makeConstraints() {
         const constraints = {
             video: {
-                width: 1280,
-                height: 720,
+                width: 1920,
+                height: 1080,
                 facingMode: this.#isfront ? 'user' : 'environment',
             }
         };

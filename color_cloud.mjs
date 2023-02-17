@@ -10,7 +10,9 @@ export default class ColorCloud {
     #shaderLoader;
 
     #pointcloudmat;
+    #pointcloudshadowmat;
     #points;
+    #pointshadows;
 
     #isDensity;
     #colorspace;
@@ -46,8 +48,10 @@ export default class ColorCloud {
         }
         this.#points.geometry = new THREE.BufferGeometry();
         this.#points.geometry.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+        this.#pointshadows.geometry = this.#points.geometry;
 
         this.#pointcloudmat.uniforms.tex.value = tex;
+        this.#pointcloudshadowmat.uniforms.tex.value = tex;
     }
 
     #createAxes() {
@@ -99,8 +103,9 @@ export default class ColorCloud {
     }
 
     #createGrid() {
-        const interval = 0.1;
+        const sideLength = 1;
         const num_lines = 10;
+        const interval = sideLength / num_lines;
         const directions = 2;
         const vertsPerLine = 2;
         const components = 3;
@@ -133,7 +138,8 @@ export default class ColorCloud {
             uniforms: {
                 tex: {value: null},
                 transparency: {value: this.#isDensity},
-                mode: {value: this.#colorspace}
+                mode: {value: this.#colorspace},
+                isShadow: {value: false},
             },
             blending: (this.#isDensity) ? THREE.AdditiveBlending : THREE.NormalBlending,
             depthTest: !this.#isDensity,
@@ -143,8 +149,26 @@ export default class ColorCloud {
 
         this.#points = new THREE.Points();
         this.#points.material = this.#pointcloudmat;
-        this.#points.renderOrder = 1;
+        this.#points.renderOrder = 2;
+
+        this.#pointcloudshadowmat = new THREE.ShaderMaterial({
+            uniforms: {
+                tex: {value: null},
+                transparency: {value: this.#isDensity},
+                mode: {value: this.#colorspace},
+                isShadow: {value: true},
+            },
+            depthTest: true,
+            depthWrite: false,
+            transparent: true,
+        });
+        this.#shaderLoader.load('./shaders/color_cloud.vert.glsl', './shaders/color_cloud.frag.glsl', this.#pointcloudshadowmat);
+
+        this.#pointshadows = new THREE.Points();
+        this.#pointshadows.material = this.#pointcloudshadowmat;
+        this.#pointshadows.renderOrder = 1;
 
         this.#group.add(this.#points);
+        this.#group.add(this.#pointshadows);
     }
 }

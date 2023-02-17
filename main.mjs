@@ -23,7 +23,7 @@ function init() {
 
     vidMgr = new VideoManager();
     histo = new Histogram(vidMgr);
-    let cloudRGB = new ColorCloud(ColorCloud.xyY, false, vidMgr);
+    let cloudRGB = new ColorCloud(ColorCloud.SRGB, false, vidMgr);
 
     window.addEventListener("click", onclick, true);
 
