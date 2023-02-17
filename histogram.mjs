@@ -51,6 +51,7 @@ export default class Histogram {
             this.#points.geometry.dispose();
         }
         this.#points = new THREE.Points(geometry, this.#bucketmaterial);
+        this.#points.layers.set(1);
         this.#offscreenscene.add(this.#points);
 
         this.#bucketmaterial.uniforms.tex.value = tex;
@@ -70,9 +71,8 @@ export default class Histogram {
 
     #computeBuckets(renderer) {
         renderer.setRenderTarget(this.#histogrambuckets);
-        this.#quad.visible = false;
-        this.#points.visible = true;
         renderer.clear();
+        this.#offscreencamera.layers.set(1);
         for (let i = 0; i < 3; i++) {
             const c_array = [0,0,0];
             c_array[i] = 1;
@@ -83,9 +83,7 @@ export default class Histogram {
     }
 
     #downsample(renderer) {
-        this.#quad.visible = true;
-        this.#points.visible = false;
-
+        this.#offscreencamera.layers.set(2);
         for (let i = 3; i >= 0; i--) {
             renderer.setRenderTarget(this.#bucketsdownsample[i]);
 
@@ -162,7 +160,7 @@ export default class Histogram {
         this.#offscreenscene.add(this.#offscreencamera);
 
         this.#quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.#downsamplematerial);
-        this.#quad.visible = false;
+        this.#quad.layers.set(2);
         this.#offscreenscene.add(this.#quad);
     }
 

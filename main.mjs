@@ -1,18 +1,15 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import Stats from 'three/addons/libs/stats.module.js';
-import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
 import VideoManager from './video_manager.mjs';
-import Histogram from './histogram.mjs';
-import ColorCloud from './color_cloud.mjs';
+import DataOverlay from './data_overlay.mjs';
 
 let canvas;
-let renderer, scene, camera, controls;
+let renderer, scene, camera;
+let dataOverlay;
 
-let stats, settings;
+let stats;
 let vidMgr;
-let histo;
 
 function init() {
     THREE.Cache.enabled = true;
@@ -22,8 +19,7 @@ function init() {
     renderer.autoClear = false;
 
     vidMgr = new VideoManager();
-    histo = new Histogram(vidMgr);
-    let cloudRGB = new ColorCloud(ColorCloud.Lab, false, vidMgr);
+    dataOverlay = new DataOverlay(vidMgr, renderer);
 
     window.addEventListener("click", onclick, true);
 
@@ -34,41 +30,11 @@ function init() {
     camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     camera.position.z = 5;
 
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.listenToKeyEvents(window); // optional
-
     scene = new THREE.Scene();
     vidMgr.addTextureUser(scene, 'background');
 
     stats = new Stats();
     document.body.appendChild(stats.dom);
-
-    const histoGroup = histo.histogramGroup;
-    histoGroup.position.set(-2,2,0);
-    histoGroup.scale.x = 2;
-    scene.add(histoGroup);
-
-    cloudRGB.cloudGroup.position.set(2,0,0);
-    cloudRGB.cloudGroup.rotation.set(Math.PI / 4, -Math.PI / 4, 0)
-    cloudRGB.cloudGroup.scale.set(2,2,2);
-    scene.add(cloudRGB.cloudGroup);
-
-    createGui();
-}
-
-function onclick(ev) {
-    if (vidMgr.canChangeFacing) {
-        vidMgr.changeFacing();
-    }
-    else {
-        console.log("Couldn't change facing.");
-    }
-}
-
-function createGui() {
-    const gui = new GUI();
-
-    settings = {};
 }
 
 function resizeRendererToDisplaySize(renderer) {
@@ -82,10 +48,6 @@ function resizeRendererToDisplaySize(renderer) {
     return needResize;
 }
 
-function animateScene(time) {
-
-}
-
 function render(time) {
     if (resizeRendererToDisplaySize(renderer)) {
         const canvas = renderer.domElement;
@@ -95,14 +57,11 @@ function render(time) {
 
 
     stats.update();
-    controls.update();
-    animateScene(time);
-
     vidMgr.doPreprocess(renderer);
-    histo.runProcessing(renderer);
 
     renderer.clear();
     renderer.render(scene, camera);
+    dataOverlay.render(renderer);
 }
 
 init();
