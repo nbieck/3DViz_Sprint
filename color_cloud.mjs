@@ -13,6 +13,7 @@ export default class ColorCloud {
     #points;
 
     #isDensity;
+    #colorspace;
 
     #group;
 
@@ -22,6 +23,7 @@ export default class ColorCloud {
 
         this.#shaderLoader = new ShaderLoader();
         this.#isDensity = density;
+        this.#colorspace = colorspace;
 
         this.#createAxes();
         this.#createBoundingBox();
@@ -131,6 +133,7 @@ export default class ColorCloud {
             uniforms: {
                 tex: {value: null},
                 transparency: {value: this.#isDensity},
+                mode: {value: this.#colorspace}
             },
             blending: (this.#isDensity) ? THREE.AdditiveBlending : THREE.NormalBlending,
             depthTest: !this.#isDensity,
