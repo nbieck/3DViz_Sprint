@@ -23,7 +23,7 @@ function init() {
 
     vidMgr = new VideoManager();
     histo = new Histogram(vidMgr);
-    let cloudRGB = new ColorCloud(ColorCloud.SRGB, false, vidMgr);
+    let cloudRGB = new ColorCloud(ColorCloud.SRGB, true, vidMgr);
 
     window.addEventListener("click", onclick, true);
 
@@ -50,6 +50,7 @@ function init() {
 
     cloudRGB.cloudGroup.position.set(2,0,0);
     cloudRGB.cloudGroup.rotation.set(Math.PI / 4, -Math.PI / 4, 0)
+    cloudRGB.cloudGroup.scale.set(2,2,2);
     scene.add(cloudRGB.cloudGroup);
 
     createGui();

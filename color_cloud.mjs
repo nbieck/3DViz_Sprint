@@ -12,6 +12,8 @@ export default class ColorCloud {
     #pointcloudmat;
     #points;
 
+    #isDensity;
+
     #group;
 
     constructor(colorspace, density, vidMgr) {
@@ -19,6 +21,7 @@ export default class ColorCloud {
         this.#group.name = "Color Cloud";
 
         this.#shaderLoader = new ShaderLoader();
+        this.#isDensity = density;
 
         this.#createAxes();
         this.#createBoundingBox();
@@ -127,12 +130,17 @@ export default class ColorCloud {
         this.#pointcloudmat = new THREE.ShaderMaterial({
             uniforms: {
                 tex: {value: null},
+                transparency: {value: this.#isDensity},
             },
+            blending: (this.#isDensity) ? THREE.AdditiveBlending : THREE.NormalBlending,
+            depthTest: !this.#isDensity,
+            transparent: this.#isDensity,
         });
         this.#shaderLoader.load('./shaders/color_cloud.vert.glsl', './shaders/color_cloud.frag.glsl', this.#pointcloudmat);
 
         this.#points = new THREE.Points();
         this.#points.material = this.#pointcloudmat;
+        this.#points.renderOrder = 1;
 
         this.#group.add(this.#points);
     }

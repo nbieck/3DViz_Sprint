@@ -1,4 +1,9 @@
+const int SRGB = 0;
+const int xyY = 1;
+const int lab = 2;
+
 uniform lowp sampler2D tex;
+uniform int mode;
 
 out vec3 color;
 
@@ -9,5 +14,7 @@ void main() {
     vec3 texColor = texelFetch(tex, texelCoord, 0).rgb;
 
     color = texColor;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(texColor - vec3(0.5), 1.);
+    vec4 viewPos = modelViewMatrix * vec4(texColor - vec3(0.5), 1.);
+    gl_Position = projectionMatrix * viewPos;
+    gl_PointSize = 10. / -viewPos.z;
 }

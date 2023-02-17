@@ -48,6 +48,7 @@ export default class Histogram {
         geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
         if (this.#points) {
             this.#offscreenscene.remove(this.#points);
+            this.#points.geometry.dispose();
         }
         this.#points = new THREE.Points(geometry, this.#bucketmaterial);
         this.#offscreenscene.add(this.#points);
