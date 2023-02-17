@@ -12,6 +12,11 @@ uniform lowp sampler2D tex;
 uniform int mode;
 uniform bool isShadow;
 
+uniform vec3 dataMin;
+uniform vec3 dataMax;
+uniform vec3 spaceMin;
+uniform vec3 spaceMax;
+
 out vec3 color;
 
 vec3 srgbToXYZ(vec3 srgb) 
@@ -43,21 +48,18 @@ void main() {
 
     color = texColor;
 
-    vec3 pos;
+    vec3 c_adjusted = texColor;
     if (mode == xyY) 
     {
         vec3 XYZ = srgbToXYZ(texColor);
         vec3 xyY = XYZToxyY(XYZ);
-        pos = xyY.xzy - vec3(0.5);
-    }
-    else 
-    {
-        pos = texColor - vec3(0.5);
+        c_adjusted = xyY.xzy;
     }
 
+    vec3 pos = mix(spaceMin, spaceMax, (c_adjusted - dataMin) / (dataMax - dataMin));
     if (isShadow) 
     {
-        pos.y = -0.5;
+        pos.y = spaceMin.y;
     }
 
     vec4 viewPos = modelViewMatrix * vec4(pos, 1.);

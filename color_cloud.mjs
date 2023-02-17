@@ -104,7 +104,10 @@ export default class ColorCloud {
 
     #createGrid() {
         const sideLength = 1;
-        const num_lines = 10;
+        let num_lines = 10;
+        if (this.#colorspace === ColorCloud.xyY) {
+            num_lines = 7;
+        }
         const interval = sideLength / num_lines;
         const directions = 2;
         const vertsPerLine = 2;
@@ -140,12 +143,17 @@ export default class ColorCloud {
                 transparency: {value: this.#isDensity},
                 mode: {value: this.#colorspace},
                 isShadow: {value: false},
+                dataMin: {},
+                dataMax: {},
+                spaceMin: {},
+                spaceMax: {},
             },
             blending: (this.#isDensity) ? THREE.AdditiveBlending : THREE.NormalBlending,
             depthTest: !this.#isDensity,
             transparent: this.#isDensity,
         });
         this.#shaderLoader.load('./shaders/color_cloud.vert.glsl', './shaders/color_cloud.frag.glsl', this.#pointcloudmat);
+        this.#setbounds(this.#pointcloudmat);
 
         this.#points = new THREE.Points();
         this.#points.material = this.#pointcloudmat;
@@ -157,12 +165,17 @@ export default class ColorCloud {
                 transparency: {value: this.#isDensity},
                 mode: {value: this.#colorspace},
                 isShadow: {value: true},
+                dataMin: {},
+                dataMax: {},
+                spaceMin: {},
+                spaceMax: {},
             },
             depthTest: true,
             depthWrite: false,
             transparent: true,
         });
         this.#shaderLoader.load('./shaders/color_cloud.vert.glsl', './shaders/color_cloud.frag.glsl', this.#pointcloudshadowmat);
+        this.#setbounds(this.#pointcloudshadowmat);
 
         this.#pointshadows = new THREE.Points();
         this.#pointshadows.material = this.#pointcloudshadowmat;
@@ -170,5 +183,18 @@ export default class ColorCloud {
 
         this.#group.add(this.#points);
         this.#group.add(this.#pointshadows);
+    }
+
+    #setbounds(mat) {
+        if (this.#colorspace === ColorCloud.SRGB) {
+            mat.uniforms.dataMin.value = new THREE.Vector3(0,0,0);
+            mat.uniforms.dataMax.value = new THREE.Vector3(1,1,1);
+        }
+        if (this.#colorspace === ColorCloud.xyY) {
+            mat.uniforms.dataMin.value = new THREE.Vector3(0, 0, 0);
+            mat.uniforms.dataMax.value = new THREE.Vector3(0.7, 1, 0.7);
+        }
+        mat.uniforms.spaceMin.value = new THREE.Vector3(-0.5, -0.5, -0.5);
+        mat.uniforms.spaceMax.value = new THREE.Vector3(0.5, 0.5, 0.5);
     }
 }
